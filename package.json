@@ -1,0 +1,21 @@
+{
+  "name": "cli-deneme",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bin/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "figlet": "^1.5.2",
+    "gradient-string": "^2.0.1",
+    "inquirer": "^9.1.1"
+  },
+  "bin": {
+    "onur": "./bin/index.js"
+  }
+}
