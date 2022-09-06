@@ -249,7 +249,7 @@ export default ${name}Reducer;
   baseRepository: {
     label: "baseRepository",
     write: () => {
-      const cwd = process.cwd();
+      const cwd = process.cwd() + "/database";
       const repositoryPath = cwd + "/data-access";
       if (!existsSync(repositoryPath)) {
         mkdirSync(repositoryPath, {}, (err) => {
@@ -427,7 +427,7 @@ class BaseRepository {
           },
         })
         .then(({ name }) => {
-          const cwd = process.cwd();
+          const cwd = process.cwd() + "/database";
           const businessPath = `${cwd}/business`;
           if (!existsSync(businessPath)) {
             mkdirSync(businessPath, {}, (err) => {
