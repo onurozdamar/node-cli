@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 import inquirer from "inquirer";
-import { writeFileSync, mkdirSync, existsSync, appendFileSync } from "fs";
+import {
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+  appendFileSync,
+  readFileSync,
+} from "fs";
 
 const choices = {
   redux: {
@@ -217,6 +223,26 @@ export default ${name}Reducer;
           );
           writeFileSync(actionFilePath, actionString);
           writeFileSync(reducerFilePath, reducerString);
+
+          const reducersIndexFilePath = cwd + "/reducers/index.js";
+          const store = readFileSync(reducersIndexFilePath, "utf8");
+
+          const firstCombineReducer = store.indexOf("combineReducers");
+          const endOfLine = store.indexOf(";", firstCombineReducer);
+          const addImportStore =
+            store.slice(0, endOfLine + 1) +
+            `\nimport ${name}Reducer from '../${name}/reducers/${name}.reducer';` +
+            store.slice(endOfLine + 1);
+
+          const secondCombinedReducer =
+            addImportStore.lastIndexOf("combineReducer");
+          const curlyBrace = addImportStore.indexOf("{", secondCombinedReducer);
+          const addReducerStore =
+            addImportStore.slice(0, curlyBrace + 1) +
+            `\n\t${name}Reducer,` +
+            addImportStore.slice(curlyBrace + 1);
+
+          writeFileSync(reducersIndexFilePath, addReducerStore);
         });
     },
   },
