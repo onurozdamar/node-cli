@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync, existsSync } from "fs";
 
 const choices = {
   redux: {
-    label: "Redux",
+    label: "redux",
     write: () => {
       inquirer
         .prompt({
@@ -220,9 +220,171 @@ export default ${name}Reducer;
         });
     },
   },
-  baseRepository: { label: "Base Repository", write: () => {} },
-  database: { label: "Database", write: () => {} },
-  store: { label: "Store", write: () => {} },
+  baseRepository: {
+    label: "baseRepository",
+    write: () => {
+      const repositoryPath = "data-access";
+      if (!existsSync(repositoryPath)) {
+        mkdirSync(repositoryPath, {}, (err) => {
+          console.log(err);
+        });
+      }
+      const repositoryString = `import SQLite from 'react-native-sqlite-storage';
+
+class BaseRepository {
+  constructor(entityType) {
+    this.sqlite = SQLite;
+    this.sqlite.DEBUG(true);
+    this.sqlite.enablePromise(true);
+    this.databaseName = 'awe3';
+    this.openDatabase = () => {
+      return new Promise((resolve, reject) => {
+        this.sqlite
+          .openDatabase({
+            name: this.databaseName,
+            location: 'default',
+          })
+          .then(db => {
+            resolve(db);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
+    };
+    this.entityType = entityType;
+  }
+
+  create() {
+    return new Promise((resolve, reject) => {
+      this.openDatabase()
+        .then(db => {
+          const query = \`CREATE TABLE IF NOT EXISTS \${
+            this.entityType.className
+          } (\${Object.keys(this.entityType.columns)
+        .map((column) => column + " " + this.entityType.columns[column])
+        .join(", ")});\`;
+
+          db.executeSql(query)
+            .then(val => {
+              resolve(true);
+            })
+            .catch(err => {
+              reject(false);
+            });
+        })
+        .catch(err => {
+          reject(false);
+        });
+    });
+  }
+
+  get(options = {}) {
+    return new Promise((resolve, reject) => {
+      this.openDatabase().then(db => {
+        const query = \`SELECT \${options.get || "*"} FROM \${
+        this.entityType.className
+      } \${Object.keys(options)
+        .map((key) => options[key].keyword + " " + options[key].value)
+        .join(" ")}\`;
+
+        db.executeSql(query)
+          .then(([values]) => {
+            var array = [];
+
+            for (let index = 0; index < values.rows.length; index++) {
+              const element = values.rows.item(index);
+              array.push(element);
+            }
+
+            resolve(array);
+          })
+          .catch(err => {
+            reject(false);
+          });
+      });
+    });
+  }
+
+  add(model) {
+    return new Promise((resolve, reject) => {
+      this.openDatabase().then(db => {
+        const filteredModel = Object.keys(model)
+          .map(key => (this.entityType.columns[key] ? key : null))
+          .filter(k => k);
+
+        const query = \`INSERT INTO \${
+          this.entityType.className
+        } (\${filteredModel
+        .map((key) => key)
+        .join(", ")}) VALUES (\${filteredModel
+        .map((key) => "'" + model[key] + "'")
+        .join(", ")})\`;
+
+        db.executeSql(query)
+          .then(val => {
+            resolve({...model, id: val[0].insertId});
+          })
+          .catch(err => {
+            reject(false);
+          });
+      });
+    });
+  }
+
+  update(model) {
+    return new Promise((resolve, reject) => {
+      this.openDatabase().then(db => {
+        const query = \`UPDATE \${this.entityType.className} SET \${Object.keys(
+        model
+      )
+        .map((key) => (this.entityType.columns[key] ? key : null))
+        .filter((k) => k)
+        .map((key) => key + " = '" + model[key] + "'")
+        .join(", ")} WHERE id = \${model.id}\`;
+
+        db.executeSql(query)
+          .then(val => {
+            resolve(model);
+          })
+          .catch(err => {
+            reject(false);
+          });
+      });
+    });
+  }
+
+  delete(id, option = 'id') {
+    return new Promise((resolve, reject) => {
+      this.openDatabase().then(db => {
+        const query = \`DELETE FROM \${
+          this.entityType.className
+        } WHERE \${option} = \${id}\`;
+
+        db.executeSql(query)
+          .then(val => {
+            resolve(true);
+          })
+          .catch(err => {
+            reject(false);
+          });
+      });
+    });
+  }
+}
+`;
+
+      const repositoryFilePath = `${repositoryPath}/BaseRepository.js`;
+      const repositoryIndexFilePath = `${repositoryPath}/index.js`;
+      writeFileSync(
+        repositoryIndexFilePath,
+        "export * from './BaseRepository';"
+      );
+      writeFileSync(repositoryFilePath, repositoryString);
+    },
+  },
+  database: { label: "database", write: () => {} },
+  store: { label: "store", write: () => {} },
 };
 
 inquirer
@@ -230,7 +392,12 @@ inquirer
     type: "list",
     name: "template",
     message: "Choose your template?",
-    choices: [choices.redux.label, choices.database.label, choices.store.label],
+    choices: [
+      choices.redux.label,
+      choices.baseRepository.label,
+      choices.database.label,
+      choices.store.label,
+    ],
   })
   .then(({ template }) => {
     console.log(template);
