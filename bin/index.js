@@ -26,7 +26,7 @@ const choices = {
           },
         })
         .then(({ name }) => {
-          const cwd = process.cwd();
+          const cwd = process.cwd() + "/store";
           const storePath = `${cwd}/${name}`;
           const actionsPath = `${storePath}/actions`;
           const reducersPath = `${storePath}/reducers`;
