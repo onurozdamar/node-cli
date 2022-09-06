@@ -458,7 +458,44 @@ export class ${serviceNameFirstLetterUpper}Service {
         });
     },
   },
-  store: { label: "store", write: () => {} },
+  store: {
+    label: "store",
+    write: () => {
+      const cwd = process.cwd();
+      const storePath = `${cwd}/store`;
+      const reducersPath = `${storePath}/reducers`;
+      if (!existsSync(storePath)) {
+        mkdirSync(storePath, {}, (err) => {
+          console.log(err);
+        });
+      }
+      if (!existsSync(reducersPath)) {
+        mkdirSync(reducersPath, {}, (err) => {
+          console.log(err);
+        });
+      }
+
+      const storeString = `import {createStore, compose, applyMiddleware} from 'redux';
+import thunkMiddleware from 'redux-thunk';
+import createReducer from './reducers/index';
+
+const enhancher = compose(applyMiddleware(thunkMiddleware));
+const store = createStore(createReducer(), enhancher);
+export default store;
+`;
+
+      const reducerString = `import {combineReducers} from 'redux';
+const createReducer = () => combineReducers({});
+
+export default createReducer;
+`;
+
+      const reducersIndexFilePath = `${reducersPath}/index.js`;
+      const storeIndexFilePath = `${storePath}/index.js`;
+      writeFileSync(storeIndexFilePath, storeString);
+      writeFileSync(reducersIndexFilePath, reducerString);
+    },
+  },
 };
 
 inquirer
