@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import inquirer from "inquirer";
-import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { writeFileSync, mkdirSync, existsSync, appendFileSync } from "fs";
 
 const choices = {
   redux: {
@@ -223,7 +223,8 @@ export default ${name}Reducer;
   baseRepository: {
     label: "baseRepository",
     write: () => {
-      const repositoryPath = "data-access";
+      const cwd = process.cwd();
+      const repositoryPath = cwd + "/data-access";
       if (!existsSync(repositoryPath)) {
         mkdirSync(repositoryPath, {}, (err) => {
           console.log(err);
@@ -383,7 +384,80 @@ class BaseRepository {
       writeFileSync(repositoryFilePath, repositoryString);
     },
   },
-  database: { label: "database", write: () => {} },
+  businessService: {
+    label: "businessService",
+    write: () => {
+      inquirer
+        .prompt({
+          type: "input",
+          name: "name",
+          message: "Enter your service name?",
+          validate: (a) => {
+            const isValid = a.length > 0;
+            if (isValid) {
+              return true;
+            }
+            return "The service name length must be greater than zero.";
+          },
+        })
+        .then(({ name }) => {
+          const cwd = process.cwd();
+          const businessPath = `${cwd}/business`;
+          if (!existsSync(businessPath)) {
+            mkdirSync(businessPath, {}, (err) => {
+              console.log(err);
+            });
+          }
+
+          const serviceNameFirstLetterUpper =
+            name[0].toUpperCase() + name.slice(1);
+
+          const actionString = `import {${serviceNameFirstLetterUpper}Dal} from '../data-access';
+import {${serviceNameFirstLetterUpper}Type} from '../types';
+
+export class ${serviceNameFirstLetterUpper}Service {
+  constructor() {
+    this.${name}Dal = new ${serviceNameFirstLetterUpper}Dal(${serviceNameFirstLetterUpper}Type);
+  }
+
+  create() {
+    this.${name}Dal.create();
+  }
+
+  get() {
+    return this.${name}Dal.get();
+  }
+
+  getById(id) {
+    return this.${name}Dal.get({
+      where: {keyword: 'WHERE', value: 'id= ' + id},
+    });
+  }
+
+  add(model) {
+    return this.${name}Dal.add(model);
+  }
+
+  update(model) {
+    return this.${name}Dal.update(model);
+  }
+
+  delete(id) {
+    return this.${name}Dal.delete(id);
+  }
+}
+`;
+
+          const businessIndexFilePath = `${businessPath}/index.js`;
+          const businessFilePath = `${businessPath}/${serviceNameFirstLetterUpper}Service.js`;
+          appendFileSync(
+            businessIndexFilePath,
+            `export {${serviceNameFirstLetterUpper}Service} from './${serviceNameFirstLetterUpper}Service';\n`
+          );
+          writeFileSync(businessFilePath, actionString);
+        });
+    },
+  },
   store: { label: "store", write: () => {} },
 };
 
@@ -392,12 +466,7 @@ inquirer
     type: "list",
     name: "template",
     message: "Choose your template?",
-    choices: [
-      choices.redux.label,
-      choices.baseRepository.label,
-      choices.database.label,
-      choices.store.label,
-    ],
+    choices: Object.keys(choices).map((key) => choices[key].label),
   })
   .then(({ template }) => {
     console.log(template);
