@@ -481,6 +481,34 @@ export class ${serviceNameFirstLetterUpper}Service {
             `export {${serviceNameFirstLetterUpper}Service} from './${serviceNameFirstLetterUpper}Service';\n`
           );
           writeFileSync(businessFilePath, actionString);
+
+          const baseRepositoryPath = cwd + "/data-access/BaseRepository.js";
+          const dalString = `
+export class ${serviceNameFirstLetterUpper}Dal extends BaseRepository {
+  constructor(){
+    super(${serviceNameFirstLetterUpper}Type);
+  }
+}
+`;
+          const baseRepo = readFileSync(baseRepositoryPath, "utf8");
+          const typesIndex = baseRepo.indexOf("types");
+          let newBaseRepo;
+          if (typesIndex !== -1) {
+            const curlyBrace = baseRepo.lastIndexOf("}", typesIndex);
+            newBaseRepo =
+              baseRepo.slice(0, curlyBrace) +
+              `\t${serviceNameFirstLetterUpper},\n` +
+              baseRepo.slice(curlyBrace);
+          } else {
+            const endOfLine = baseRepo.indexOf(";", typesIndex);
+            newBaseRepo =
+              baseRepo.slice(0, endOfLine + 1) +
+              `\nimport {
+  ${serviceNameFirstLetterUpper},
+} from '../types';` +
+              baseRepo.slice(endOfLine + 1);
+          }
+          writeFileSync(baseRepositoryPath, newBaseRepo + dalString);
         });
     },
   },
@@ -532,6 +560,5 @@ inquirer
     choices: Object.keys(choices).map((key) => choices[key].label),
   })
   .then(({ template }) => {
-    console.log(template);
     choices[template].write();
   });
