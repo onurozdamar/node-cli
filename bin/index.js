@@ -550,6 +550,61 @@ export default createReducer;
       writeFileSync(reducersIndexFilePath, reducerString);
     },
   },
+  html: {
+    label: "html",
+    write: () => {
+      inquirer
+        .prompt({
+          type: "input",
+          name: "name",
+          message: "Enter your folder name?",
+          validate: (a) => {
+            const isValid = a.length > 0;
+            if (isValid) {
+              return true;
+            }
+            return "The folder name length must be greater than zero.";
+          },
+        })
+        .then(({ name }) => {
+          const folderPath = process.cwd() + "/" + name;
+          if (!existsSync(folderPath)) {
+            mkdirSync(folderPath, {}, (err) => {
+              console.log(err);
+            });
+          }
+          const htmlPath = folderPath + "/index.html";
+          const cssPath = folderPath + "/style.css";
+          const jsPath = folderPath + "/script.js";
+
+          const htmlString = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+
+  <body>
+    Hello!
+  </body>
+</html>
+          `;
+          const cssString = `* {
+  box-sizing: border-box;
+}
+          `;
+          const jsString = `console.log("Hello!")`;
+
+          writeFileSync(htmlPath, htmlString);
+          writeFileSync(cssPath, cssString);
+          writeFileSync(jsPath, jsString);
+        });
+    },
+  },
 };
 
 inquirer
