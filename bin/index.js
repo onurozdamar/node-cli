@@ -61,8 +61,8 @@ export const UPDATE_${filenameUpper} = "UPDATE_${filenameUpper}";
 export const DELETE_${filenameUpper} = "DELETE_${filenameUpper}";
 export const SET_LOADING = "SET_LOADING_${filenameUpper}";
           
-export const get${filenameFirstLetterUpper}S = () => (dispatch) => {
-  const service = DatabaseService();
+export const get${filenameFirstLetterUpper}s = () => (dispatch) => {
+  const service = new ${filenameFirstLetterUpper}Service();
   dispatch(setLoading(true));
 
   service
@@ -84,7 +84,7 @@ export const get${filenameFirstLetterUpper}S = () => (dispatch) => {
 };
 
 export const get${filenameFirstLetterUpper}ById = (id) => (dispatch) => {
-  const service = DatabaseService();
+  const service = new ${filenameFirstLetterUpper}Service();
   dispatch(setLoading(true));
 
   service
@@ -93,7 +93,7 @@ export const get${filenameFirstLetterUpper}ById = (id) => (dispatch) => {
       dispatch(setLoading(false));
       dispatch({
         type: GET_${filenameUpper}_BY_ID,
-        payload: response,
+        payload: response[0],
       });
     })
     .catch((e) => {
@@ -106,7 +106,7 @@ export const get${filenameFirstLetterUpper}ById = (id) => (dispatch) => {
 };
 
 export const add${filenameFirstLetterUpper} = model => (dispatch) => {
-  const service = DatabaseService();
+  const service = new ${filenameFirstLetterUpper}Service();
 
   service
     .add(model)
@@ -125,7 +125,7 @@ export const add${filenameFirstLetterUpper} = model => (dispatch) => {
 };
 
 export const update${filenameFirstLetterUpper} = model => (dispatch) => {
-  const service = DatabaseService();
+  const service = new ${filenameFirstLetterUpper}Service();
 
   service
     .update(model)
@@ -144,7 +144,7 @@ export const update${filenameFirstLetterUpper} = model => (dispatch) => {
 };
 
 export const delete${filenameFirstLetterUpper} = id => (dispatch) => {
-  const service = DatabaseService();
+  const service = new ${filenameFirstLetterUpper}Service();
 
   service
     .delete(id)
@@ -497,14 +497,14 @@ export class ${serviceNameFirstLetterUpper}Dal extends BaseRepository {
             const curlyBrace = baseRepo.lastIndexOf("}", typesIndex);
             newBaseRepo =
               baseRepo.slice(0, curlyBrace) +
-              `\t${serviceNameFirstLetterUpper},\n` +
+              `\t${serviceNameFirstLetterUpper}Type,\n` +
               baseRepo.slice(curlyBrace);
           } else {
             const endOfLine = baseRepo.indexOf(";", typesIndex);
             newBaseRepo =
               baseRepo.slice(0, endOfLine + 1) +
               `\nimport {
-  ${serviceNameFirstLetterUpper},
+  ${serviceNameFirstLetterUpper}Type,
 } from '../types';` +
               baseRepo.slice(endOfLine + 1);
           }
